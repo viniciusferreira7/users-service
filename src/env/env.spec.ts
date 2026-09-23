@@ -33,6 +33,25 @@ describe('envSchema', () => {
     expect(() => envSchema.parse({ ...baseEnv, PORT: 'abc' })).toThrow();
   });
 
+  it.each([
+    ['empty', ''],
+    ['blank', ' '],
+    ['zero', '0'],
+    ['negative', '-5'],
+    ['fractional', '3.5'],
+    ['out of range', '65536'],
+  ])('rejects a PORT that is %s', (_label, value) => {
+    // An empty PORT used to coerce to 0 and make Nest listen on a random port.
+    expect(() => envSchema.parse({ ...baseEnv, PORT: value })).toThrow();
+  });
+
+  it('rejects a DATABASE_PORT that is not a valid port', () => {
+    expect(() => envSchema.parse({ ...baseEnv, DATABASE_PORT: '' })).toThrow();
+    expect(() =>
+      envSchema.parse({ ...baseEnv, DATABASE_PORT: '70000' })
+    ).toThrow();
+  });
+
   it('rejects a negative drain delay', () => {
     expect(() =>
       envSchema.parse({ ...baseEnv, SHUTDOWN_DRAIN_DELAY_MS: '-1' })
