@@ -8,6 +8,7 @@ import { databaseConfig } from './config/database.config';
 import { envSchema } from './env/env';
 import { EnvModule } from './env/env.module';
 import { EnvService } from './env/env.service';
+import { HealthModule } from './health/health.module';
 import { UsersModule } from './users/users.module';
 
 @Module({
@@ -25,6 +26,7 @@ import { UsersModule } from './users/users.module';
       useFactory: databaseConfig,
     }),
     UsersModule,
+    HealthModule,
   ],
   controllers: [AppController],
   providers: [AppService],
