@@ -4,6 +4,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { ObservabilityModule } from '@viniciusferreira7/signals/nest';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
+import { AuthModule } from './auth/auth.module';
 import { databaseConfig } from './config/database.config';
 import { envSchema } from './env/env';
 import { EnvModule } from './env/env.module';
@@ -26,6 +27,7 @@ import { UsersModule } from './users/users.module';
       useFactory: databaseConfig,
     }),
     UsersModule,
+    AuthModule,
     HealthModule,
   ],
   controllers: [AppController],

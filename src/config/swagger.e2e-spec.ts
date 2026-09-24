@@ -38,6 +38,7 @@ describe('Swagger (e2e)', () => {
   it('documents every route the application exposes', () => {
     expect(Object.keys(document.paths).sort()).toEqual([
       '/',
+      '/auth/register',
       '/health/live',
       '/health/ready',
       '/health/startup',
@@ -45,7 +46,11 @@ describe('Swagger (e2e)', () => {
   });
 
   it('groups the probes and the greeting under Health', () => {
-    for (const path of Object.keys(document.paths)) {
+    const getPaths = Object.keys(document.paths).filter(
+      (path) => document.paths[path].get
+    );
+
+    for (const path of getPaths) {
       expect(document.paths[path].get?.tags).toEqual(['Health']);
       expect(document.paths[path].get?.summary).toBeTruthy();
     }
