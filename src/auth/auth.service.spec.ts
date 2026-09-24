@@ -14,6 +14,15 @@ import {
 } from './auth.service';
 import type { RegisterDto } from './dtos/register.dto';
 import { jwtOptions } from './jwt-options';
+import { verifyPassword } from './password';
+
+// Passthrough spy: the real comparison runs, and the tests can still see
+// that `login` asked for it.
+vi.mock('./password', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('./password')>();
+
+  return { ...actual, verifyPassword: vi.fn(actual.verifyPassword) };
+});
 
 const dto: RegisterDto = {
   email: 'ana@marketplace.dev',
@@ -217,6 +226,21 @@ describe('AuthService.login', () => {
 
     await expect(authService.login(credentials)).rejects.toThrow(
       new UnauthorizedException(INVALID_CREDENTIALS)
+    );
+  });
+
+  it('still runs the password comparison for an unknown email', async () => {
+    const { authService, usersService } = makeAuthService();
+    usersService.findByEmailWithPassword.mockResolvedValue(null);
+    vi.mocked(verifyPassword).mockClear();
+
+    await authService.login(credentials).catch(() => undefined);
+
+    // Without it an unknown email answers in ~1 ms against ~50 ms for a wrong
+    // password, and the timing tells which emails are registered.
+    expect(verifyPassword).toHaveBeenCalledExactlyOnceWith(
+      'secret123',
+      undefined
     );
   });
 
