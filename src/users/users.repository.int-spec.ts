@@ -2,6 +2,7 @@ import { ConfigModule } from '@nestjs/config';
 import { Test, type TestingModule } from '@nestjs/testing';
 import { getRepositoryToken, TypeOrmModule } from '@nestjs/typeorm';
 import { assertTestDatabase } from 'test/utils/assert-test-database';
+import { sqlStateOf } from 'test/utils/sql-state-of';
 import { DataSource, type Repository } from 'typeorm';
 import { databaseConfig } from '@/config/database.config';
 import { envSchema } from '@/env/env';
@@ -23,19 +24,6 @@ function makeUser(overrides: Partial<User> = {}): Partial<User> {
     role: UserRole.BUYER,
     ...overrides,
   };
-}
-
-/** Postgres SQLSTATE carried by a failed query. */
-async function sqlStateOf(promise: Promise<unknown>): Promise<string> {
-  try {
-    await promise;
-  } catch (error) {
-    return (
-      (error as { driverError?: { code?: string } }).driverError?.code ?? ''
-    );
-  }
-
-  throw new Error('Expected the query to fail');
 }
 
 describe('User persistence (integration)', () => {
