@@ -1,4 +1,11 @@
-import { Body, Controller, Post, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  HttpCode,
+  HttpStatus,
+  Post,
+  UseGuards,
+} from '@nestjs/common';
 import {
   ApiBadRequestResponse,
   ApiConflictResponse,
@@ -7,9 +14,12 @@ import {
   ApiTags,
   ApiTooManyRequestsResponse,
 } from '@nestjs/swagger';
-import { ThrottlerGuard } from '@nestjs/throttler';
+import { Throttle, ThrottlerGuard } from '@nestjs/throttler';
 import { UserResponseDto } from '../users/dtos/user-response.dto';
 import { AuthService } from './auth.service';
+import { LOGIN_THROTTLE, REGISTER_THROTTLE } from './auth-throttles';
+import { LoginDto } from './dtos/login.dto';
+import type { LoginResponseDto } from './dtos/login-response.dto';
 import { RegisterDto } from './dtos/register.dto';
 
 @ApiTags('Auth')
@@ -19,6 +29,7 @@ export class AuthController {
 
   @Post('register')
   @UseGuards(ThrottlerGuard)
+  @Throttle({ default: REGISTER_THROTTLE })
   @ApiOperation({
     summary: 'Register a seller or buyer account',
     description:
@@ -32,5 +43,13 @@ export class AuthController {
   })
   register(@Body() dto: RegisterDto): Promise<UserResponseDto> {
     return this.authService.register(dto);
+  }
+
+  @Post('login')
+  @HttpCode(HttpStatus.OK)
+  @UseGuards(ThrottlerGuard)
+  @Throttle({ default: LOGIN_THROTTLE })
+  login(@Body() dto: LoginDto): Promise<LoginResponseDto> {
+    return this.authService.login(dto);
   }
 }

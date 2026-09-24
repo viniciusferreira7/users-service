@@ -38,6 +38,7 @@ describe('Swagger (e2e)', () => {
   it('documents every route the application exposes', () => {
     expect(Object.keys(document.paths).sort()).toEqual([
       '/',
+      '/auth/login',
       '/auth/register',
       '/health/live',
       '/health/ready',

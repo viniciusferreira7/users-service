@@ -8,7 +8,7 @@ import { makeRegisterBody } from 'test/factories/make-register-body';
 import { resetTestDatabase } from 'test/utils/reset-test-database';
 import { DataSource, type Repository } from 'typeorm';
 import { User } from '@/users/entities/user.entity';
-import { REGISTER_THROTTLE } from './register-throttle';
+import { REGISTER_THROTTLE } from './auth-throttles';
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/;
 
