@@ -8,6 +8,7 @@ const baseEnv = {
   DATABASE_NAME: 'users_db',
   OTEL_SERVICE_NAME: 'users-service',
   OTEL_EXPORTER_OTLP_ENDPOINT: 'http://localhost:4318',
+  JWT_SECRET: 'a'.repeat(32),
 };
 
 describe('envSchema', () => {
@@ -90,5 +91,21 @@ describe('envSchema', () => {
     expect(() =>
       envSchema.parse({ ...baseEnv, LOG_LEVEL: 'verbose' })
     ).toThrow();
+  });
+
+  it('rejects a missing JWT_SECRET', () => {
+    const { JWT_SECRET: _, ...withoutSecret } = baseEnv;
+
+    expect(() => envSchema.parse(withoutSecret)).toThrow();
+  });
+
+  it('rejects a JWT_SECRET shorter than 32 characters', () => {
+    expect(() =>
+      envSchema.parse({ ...baseEnv, JWT_SECRET: 'a'.repeat(31) })
+    ).toThrow();
+  });
+
+  it('accepts a JWT_SECRET of exactly 32 characters', () => {
+    expect(envSchema.parse(baseEnv).JWT_SECRET).toBe('a'.repeat(32));
   });
 });
