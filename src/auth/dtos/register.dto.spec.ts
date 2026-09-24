@@ -57,6 +57,14 @@ describe('RegisterDto', () => {
     ['role', 'missing', { role: undefined }],
     ['role', 'outside seller and buyer', { role: 'admin' }],
     ['status', 'sent by the client', { status: 'inactive' }],
+    // `encodeURI` (inside validator.js) throws on a lone surrogate; that must
+    // surface as a validation error, never as an uncaught exception.
+    ['password', 'holding a lone surrogate', { password: '\ud800abcdef' }],
+    ['email', 'holding a lone surrogate', { email: 'a\ud800@marketplace.dev' }],
+    ['firstName', 'holding a lone surrogate', { firstName: 'A\udc00na' }],
+    // Postgres rejects NUL in text columns (22021).
+    ['firstName', 'holding a NUL character', { firstName: 'Ana\u0000' }],
+    ['lastName', 'holding a control character', { lastName: 'Sou\u0007za' }],
   ])('rejects %s when it is %s', async (property, _case, overrides) => {
     await expect(
       invalidPropertiesOf(makeRegisterBody(overrides))
@@ -71,6 +79,11 @@ describe('RegisterDto', () => {
       { firstName: 'a'.repeat(100), lastName: 'b'.repeat(100) },
     ],
     ['the seller role', { role: 'seller' }],
+    ['a 72-byte password of emoji', { password: '😀'.repeat(18) }],
+    [
+      'names with accents and emoji',
+      { firstName: 'Ána 😀', lastName: 'Sóuza' },
+    ],
   ])('accepts %s', async (_case, overrides) => {
     await expect(
       invalidPropertiesOf(makeRegisterBody(overrides))

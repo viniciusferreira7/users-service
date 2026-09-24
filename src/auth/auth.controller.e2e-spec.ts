@@ -107,6 +107,9 @@ describe('POST /auth/register (E2E)', () => {
     ['role', { role: undefined }],
     ['role', { role: 'admin' }],
     ['status', { status: 'inactive' }],
+    ['password', { password: '\ud800abcdef' }],
+    ['email', { email: 'a\ud800@marketplace.dev' }],
+    ['firstName', { firstName: 'Ana\u0000' }],
   ])(
     'answers 400 naming %s and saves nothing (%o)',
     async (field, overrides) => {

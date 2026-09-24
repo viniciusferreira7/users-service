@@ -1,8 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { Transform } from 'class-transformer';
 import {
-  IsByteLength,
-  IsEmail,
   IsEnum,
   IsNotEmpty,
   IsString,
@@ -12,6 +10,11 @@ import {
 } from 'class-validator';
 import { UserRole } from '../../users/enums/user-role.enum';
 import { normalizeEmail } from '../normalize-email';
+import {
+  IsWellFormedEmail,
+  MaxUtf8Bytes,
+  STORABLE_TEXT,
+} from './string-validators';
 
 export const PASSWORD_MIN_LENGTH = 6;
 /**
@@ -32,7 +35,7 @@ export class RegisterDto {
   )
   // `isEmail` rejects anything over 254 characters, which also keeps the
   // value inside the `varchar(255)` column.
-  @IsEmail()
+  @IsWellFormedEmail()
   email: string;
 
   @ApiProperty({
@@ -42,15 +45,16 @@ export class RegisterDto {
   })
   @IsString()
   @MinLength(PASSWORD_MIN_LENGTH)
-  @IsByteLength(0, PASSWORD_MAX_BYTES, {
-    message: `password must be at most ${PASSWORD_MAX_BYTES} bytes long`,
-  })
+  @MaxUtf8Bytes(PASSWORD_MAX_BYTES)
   password: string;
 
   @ApiProperty({ example: 'Ana', maxLength: NAME_MAX_LENGTH })
   @IsString()
   @IsNotEmpty()
   @Matches(NOT_BLANK, { message: 'firstName must not be blank' })
+  @Matches(STORABLE_TEXT, {
+    message: 'firstName must not contain control characters',
+  })
   @MaxLength(NAME_MAX_LENGTH)
   firstName: string;
 
@@ -58,6 +62,9 @@ export class RegisterDto {
   @IsString()
   @IsNotEmpty()
   @Matches(NOT_BLANK, { message: 'lastName must not be blank' })
+  @Matches(STORABLE_TEXT, {
+    message: 'lastName must not contain control characters',
+  })
   @MaxLength(NAME_MAX_LENGTH)
   lastName: string;
 
