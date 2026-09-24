@@ -95,4 +95,30 @@ describe('UsersService (integration)', () => {
     // 23505 = unique_violation
     await expect(sqlStateOf(usersService.create(data))).resolves.toBe('23505');
   });
+
+  it('loads the password hash when looking a user up for a login', async () => {
+    await usersService.create(data);
+
+    const found = await usersService.findByEmailWithPassword(data.email);
+
+    expect(found).toMatchObject({
+      email: data.email,
+      status: UserStatus.ACTIVE,
+    });
+    expect(found?.password).toBe(data.password);
+  });
+
+  it('answers null to a login lookup for an unknown email', async () => {
+    await expect(
+      usersService.findByEmailWithPassword('nobody@marketplace.dev')
+    ).resolves.toBeNull();
+  });
+
+  it('keeps the hash out of the regular email lookup', async () => {
+    await usersService.create(data);
+
+    const found = await usersService.findByEmail(data.email);
+
+    expect(found?.password).toBeUndefined();
+  });
 });

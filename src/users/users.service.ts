@@ -19,6 +19,18 @@ export class UsersService {
   }
 
   /**
+   * The only read that loads the password hash — for checking credentials.
+   * Every other read keeps it out through `select: false`.
+   */
+  findByEmailWithPassword(email: string): Promise<User | null> {
+    return this.users
+      .createQueryBuilder('user')
+      .addSelect('user.password')
+      .where('user.email = :email', { email })
+      .getOne();
+  }
+
+  /**
    * Inserts the user and reads it back, so the result carries the
    * database-generated fields and — because of `select: false` — never the
    * password hash that was just written.
