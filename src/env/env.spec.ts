@@ -1,3 +1,4 @@
+import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import { envSchema } from './env';
 
@@ -107,5 +108,17 @@ describe('envSchema', () => {
 
   it('accepts a JWT_SECRET of exactly 32 characters', () => {
     expect(envSchema.parse(baseEnv).JWT_SECRET).toBe('a'.repeat(32));
+  });
+
+  it('refuses to boot on the JWT_SECRET placeholder from .env.example', () => {
+    // `cp .env.example .env` must not start a service that signs tokens with
+    // a publicly known key.
+    const example = readFileSync('.env.example', 'utf8');
+    const placeholder = example.match(/^JWT_SECRET=(.*)$/m)?.[1];
+
+    expect(placeholder).toBeDefined();
+    expect(() =>
+      envSchema.parse({ ...baseEnv, JWT_SECRET: placeholder })
+    ).toThrow();
   });
 });
