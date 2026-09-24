@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import type { Repository } from 'typeorm';
+import { QueryFailedError, type Repository } from 'typeorm';
 import { User } from './entities/user.entity';
 
 export type CreateUserData = Pick<
@@ -24,8 +24,27 @@ export class UsersService {
    * password hash that was just written.
    */
   async create(data: CreateUserData): Promise<User> {
-    const { id } = await this.users.save(this.users.create(data));
+    let id: string;
+
+    try {
+      ({ id } = await this.users.save(this.users.create(data)));
+    } catch (error) {
+      throw withoutQueryParameters(error);
+    }
 
     return this.users.findOneByOrFail({ id });
   }
+}
+
+/**
+ * A failed insert carries its bound values — the password hash among them —
+ * and the logger serializes every enumerable property of an error. Drop them
+ * so the hash never reaches a log; the SQLSTATE in `driverError` stays.
+ */
+function withoutQueryParameters(error: unknown): unknown {
+  if (error instanceof QueryFailedError) {
+    Reflect.deleteProperty(error, 'parameters');
+  }
+
+  return error;
 }

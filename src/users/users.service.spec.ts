@@ -1,4 +1,4 @@
-import type { Repository } from 'typeorm';
+import { QueryFailedError, type Repository } from 'typeorm';
 import type { User } from './entities/user.entity';
 import { UserRole } from './enums/user-role.enum';
 import { UserStatus } from './enums/user-status.enum';
@@ -63,5 +63,28 @@ describe('UsersService', () => {
     repository.save.mockRejectedValue(failure);
 
     await expect(makeService(repository).create(data)).rejects.toBe(failure);
+  });
+
+  it('drops the query parameters from a failed insert so the hash never reaches a log', async () => {
+    const repository = makeRepository();
+    const failure = new QueryFailedError(
+      'INSERT INTO "users" ...',
+      [data.email, data.password, data.firstName],
+      Object.assign(new Error('invalid byte sequence'), { code: '22021' })
+    );
+    repository.save.mockRejectedValue(failure);
+
+    const error = await makeService(repository)
+      .create(data)
+      .catch((rejection: unknown) => rejection);
+
+    expect(error).toBeInstanceOf(QueryFailedError);
+    expect((error as QueryFailedError).driverError).toMatchObject({
+      code: '22021',
+    });
+    expect(JSON.stringify(error)).not.toContain(data.password);
+    expect(JSON.stringify({ ...(error as object) })).not.toContain(
+      data.password
+    );
   });
 });
