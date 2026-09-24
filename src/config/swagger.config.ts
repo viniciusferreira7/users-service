@@ -44,6 +44,7 @@ export function buildSwaggerConfig() {
       },
       'JWT-auth'
     )
+    .addTag('Auth', 'Account registration')
     .addTag('Users', 'User account management endpoints')
     .addTag('Health', 'Health monitoring endpoints')
     .build();

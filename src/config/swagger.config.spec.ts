@@ -36,6 +36,7 @@ describe('buildSwaggerConfig', () => {
 
   it('tags the areas this service owns', () => {
     expect(buildSwaggerConfig().tags?.map((tag) => tag.name)).toEqual([
+      'Auth',
       'Users',
       'Health',
     ]);

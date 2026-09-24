@@ -3,9 +3,9 @@
 Users microservice for the Marketplace microservices architecture. Owns the
 user accounts — sellers and buyers — backed by PostgreSQL 15 via TypeORM.
 
-This first version lays the foundation: the `User` entity, the database
-connection, health probes and API docs. The account and authentication
-endpoints the gateway calls land in a later step.
+It owns the `User` entity, the database connection, health probes and API
+docs, and registers new accounts through `POST /auth/register`. Login and
+tokens land in a later step.
 
 ## Where it sits
 
@@ -73,8 +73,9 @@ through `pnpm test:infra` (`docker compose --profile test up -d --wait`);
 
 ```
 src/
-  app.module.ts            Root module: config + env + observability + TypeORM + users + health
+  app.module.ts            Root module: config + env + observability + TypeORM + users + auth + health
   app.setup.ts             CORS + global ValidationPipe, shared by main.ts and the e2e harness
+  auth/                    POST /auth/register: DTOs, AuthService, rate limit
   config/                  TypeORM options and Swagger document
   env/                     Zod schema, EnvModule and typed EnvService
   health/                  Liveness/readiness/startup probes and graceful shutdown

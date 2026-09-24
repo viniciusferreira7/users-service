@@ -55,4 +55,26 @@ describe('Swagger (e2e)', () => {
       expect(document.paths[path].get?.summary).toBeTruthy();
     }
   });
+
+  it('documents the registration endpoint under Auth', () => {
+    const operation = document.paths['/auth/register'].post;
+
+    expect(operation?.tags).toEqual(['Auth']);
+    expect(operation?.summary).toBeTruthy();
+    expect(Object.keys(operation?.responses ?? {}).sort()).toEqual([
+      '201',
+      '400',
+      '409',
+      '429',
+    ]);
+  });
+
+  it('documents the registration body and the public user shape', () => {
+    const schemas = document.components?.schemas ?? {};
+
+    expect(Object.keys(schemas)).toEqual(
+      expect.arrayContaining(['RegisterDto', 'UserResponseDto'])
+    );
+    expect(JSON.stringify(schemas.UserResponseDto)).not.toContain('password');
+  });
 });
