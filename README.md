@@ -4,8 +4,8 @@ Users microservice for the Marketplace microservices architecture. Owns the
 user accounts — sellers and buyers — backed by PostgreSQL 15 via TypeORM.
 
 It owns the `User` entity, the database connection, health probes and API
-docs, and registers new accounts through `POST /auth/register`. Login and
-tokens land in a later step.
+docs, and registers accounts and logs them in through `POST /auth/register`
+and `POST /auth/login`. Route protection (guards) lands in a later step.
 
 ## Where it sits
 
@@ -75,7 +75,7 @@ through `pnpm test:infra` (`docker compose --profile test up -d --wait`);
 src/
   app.module.ts            Root module: config + env + observability + TypeORM + users + auth + health
   app.setup.ts             CORS + global ValidationPipe, shared by main.ts and the e2e harness
-  auth/                    POST /auth/register: DTOs, AuthService, rate limit
+  auth/                    POST /auth/register and /auth/login: DTOs, AuthService, JWT, rate limits
   config/                  TypeORM options and Swagger document
   env/                     Zod schema, EnvModule and typed EnvService
   health/                  Liveness/readiness/startup probes and graceful shutdown
@@ -93,3 +93,7 @@ test/
 Every variable is validated by `src/env/env.ts` at boot — an invalid or missing
 value fails the process instead of surfacing later. See `.env.example` for the
 full list.
+
+`JWT_SECRET` signs the tokens `POST /auth/login` issues. It must be the same
+value configured in the api-gateway, which verifies them, and at least 32
+characters long.

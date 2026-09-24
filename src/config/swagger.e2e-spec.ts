@@ -78,4 +78,25 @@ describe('Swagger (e2e)', () => {
     );
     expect(JSON.stringify(schemas.UserResponseDto)).not.toContain('password');
   });
+
+  it('documents the login endpoint under Auth', () => {
+    const operation = document.paths['/auth/login'].post;
+
+    expect(operation?.tags).toEqual(['Auth']);
+    expect(operation?.summary).toBeTruthy();
+    expect(Object.keys(operation?.responses ?? {}).sort()).toEqual([
+      '200',
+      '400',
+      '401',
+      '429',
+    ]);
+  });
+
+  it('documents the login body and response', () => {
+    const schemas = document.components?.schemas ?? {};
+
+    expect(Object.keys(schemas)).toEqual(
+      expect.arrayContaining(['LoginDto', 'LoginResponseDto'])
+    );
+  });
 });

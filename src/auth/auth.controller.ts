@@ -10,16 +10,18 @@ import {
   ApiBadRequestResponse,
   ApiConflictResponse,
   ApiCreatedResponse,
+  ApiOkResponse,
   ApiOperation,
   ApiTags,
   ApiTooManyRequestsResponse,
+  ApiUnauthorizedResponse,
 } from '@nestjs/swagger';
 import { Throttle, ThrottlerGuard } from '@nestjs/throttler';
 import { UserResponseDto } from '../users/dtos/user-response.dto';
 import { AuthService } from './auth.service';
 import { LOGIN_THROTTLE, REGISTER_THROTTLE } from './auth-throttles';
 import { LoginDto } from './dtos/login.dto';
-import type { LoginResponseDto } from './dtos/login-response.dto';
+import { LoginResponseDto } from './dtos/login-response.dto';
 import { RegisterDto } from './dtos/register.dto';
 
 @ApiTags('Auth')
@@ -49,6 +51,18 @@ export class AuthController {
   @HttpCode(HttpStatus.OK)
   @UseGuards(ThrottlerGuard)
   @Throttle({ default: LOGIN_THROTTLE })
+  @ApiOperation({
+    summary: 'Log in with email and password',
+    description:
+      'Returns the public user and an HS256 JWT valid for 24 hours. An unknown email and a wrong password get the same answer.',
+  })
+  @ApiOkResponse({ type: LoginResponseDto, description: 'Logged in' })
+  @ApiBadRequestResponse({ description: 'The body failed validation' })
+  @ApiUnauthorizedResponse({
+    description:
+      '"Credenciais inválidas", or "Conta inativa" for an inactive account with the right password',
+  })
+  @ApiTooManyRequestsResponse({ description: 'Login rate limit exceeded' })
   login(@Body() dto: LoginDto): Promise<LoginResponseDto> {
     return this.authService.login(dto);
   }
