@@ -5,7 +5,9 @@ user accounts — sellers and buyers — backed by PostgreSQL 15 via TypeORM.
 
 It owns the `User` entity, the database connection, health probes and API
 docs, and registers accounts and logs them in through `POST /auth/register`
-and `POST /auth/login`. Route protection (guards) lands in a later step.
+and `POST /auth/login`. Every other route requires
+`Authorization: Bearer <token>` with a token from `POST /auth/login`; a route
+opts out with `@Public()` (auth, health probes and `GET /` do).
 
 ## Where it sits
 
@@ -75,7 +77,7 @@ through `pnpm test:infra` (`docker compose --profile test up -d --wait`);
 src/
   app.module.ts            Root module: config + env + observability + TypeORM + users + auth + health
   app.setup.ts             CORS + global ValidationPipe, shared by main.ts and the e2e harness
-  auth/                    POST /auth/register and /auth/login: DTOs, AuthService, JWT, rate limits
+  auth/                    POST /auth/register and /auth/login, JWT strategy, global guard, @Public, rate limits
   config/                  TypeORM options and Swagger document
   env/                     Zod schema, EnvModule and typed EnvService
   health/                  Liveness/readiness/startup probes and graceful shutdown
@@ -83,7 +85,7 @@ src/
   utils/                   Service metadata
 test/
   setup-env.ts             Env defaults for the int/e2e lanes
-  factories/               DI container and HTTP app builders
+  factories/               DI container, HTTP app, request bodies, test-only routes and tokens
   config/                  OpenAPI document helpers
   utils/                   Test-database guard
 ```
