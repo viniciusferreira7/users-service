@@ -1,11 +1,10 @@
-import { usersServiceDetails } from '@/utils/users-service-details';
-import { buildSwaggerConfig } from './swagger.config';
+import { buildSwaggerConfig, SWAGGER_PATH } from './swagger.config';
 
 describe('buildSwaggerConfig', () => {
   it('identifies the service in the document metadata', () => {
     expect(buildSwaggerConfig().info).toMatchObject({
-      title: 'Marketplace Users Service',
-      version: usersServiceDetails.version,
+      title: 'Users Service',
+      version: '1.0',
       contact: {
         name: 'Marketplace Team',
         url: 'https://marketplace.com',
@@ -13,6 +12,10 @@ describe('buildSwaggerConfig', () => {
       },
       license: { name: 'MIT', url: 'https://opensource.org/licenses/MIT' },
     });
+  });
+
+  it('mounts the UI at /api', () => {
+    expect(SWAGGER_PATH).toBe('api');
   });
 
   it('writes the description flush left so Swagger renders it as prose', () => {

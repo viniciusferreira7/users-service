@@ -1,8 +1,7 @@
 import type { INestApplication } from '@nestjs/common';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
-import { usersServiceDetails } from '@/utils/users-service-details';
 
-export const SWAGGER_PATH = 'api/docs';
+export const SWAGGER_PATH = 'api';
 
 /**
  * Describes this service for the OpenAPI document.
@@ -12,7 +11,7 @@ export const SWAGGER_PATH = 'api/docs';
  */
 export function buildSwaggerConfig() {
   return new DocumentBuilder()
-    .setTitle('Marketplace Users Service')
+    .setTitle('Users Service')
     .setDescription(
       [
         'User accounts for the Marketplace system.',
@@ -26,7 +25,7 @@ export function buildSwaggerConfig() {
         '- Use a JWT Bearer token for protected routes',
       ].join('\n')
     )
-    .setVersion(usersServiceDetails.version)
+    .setVersion('1.0')
     .setContact(
       'Marketplace Team',
       'https://marketplace.com',
@@ -56,7 +55,7 @@ export function setupSwagger(app: INestApplication): void {
 
   SwaggerModule.setup(SWAGGER_PATH, app, document, {
     swaggerOptions: { persistAuthorization: true },
-    customSiteTitle: 'Marketplace Users Service Documentation',
+    customSiteTitle: 'Users Service Documentation',
     customfavIcon: './favicon',
     customCss: `
       .swagger-ui .topbar { display: none }

@@ -67,7 +67,7 @@ pnpm start:dev
 ```
 
 The service listens on `http://localhost:3336`; Swagger UI is at
-`http://localhost:3336/api/docs`. In `dev` TypeORM synchronizes the schema, so
+`http://localhost:3336/api`. In `dev` TypeORM synchronizes the schema, so
 the `users` table is created on first boot.
 
 The test lanes get their own throwaway Postgres behind the `test` profile, on

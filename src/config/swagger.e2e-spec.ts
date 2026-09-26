@@ -32,7 +32,7 @@ describe('Swagger (e2e)', () => {
   });
 
   it('describes the service', () => {
-    expect(document.info.title).toBe('Marketplace Users Service');
+    expect(document.info.title).toBe('Users Service');
   });
 
   it('documents every route the application exposes', () => {
