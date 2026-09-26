@@ -9,6 +9,18 @@ and `POST /auth/login`. Every other route requires
 `Authorization: Bearer <token>` with a token from `POST /auth/login`; a route
 opts out with `@Public()` (auth, health probes and `GET /` do).
 
+Protected user reads:
+
+| Route | Returns |
+| --- | --- |
+| `GET /users/profile` | The logged-in account, read fresh from the database by the token's id |
+| `GET /users/sellers` | Active sellers, sorted by name |
+| `GET /users/:id` | One user by UUID; `404` if none, `400` if the id is not a UUID |
+
+No response carries the password hash. Only `/users/profile` includes the
+email; the other two return the public shape (`id`, names, `role`, `status`)
+so any logged-in user cannot harvest other users' emails.
+
 ## Where it sits
 
 ```
@@ -81,7 +93,7 @@ src/
   config/                  TypeORM options and Swagger document
   env/                     Zod schema, EnvModule and typed EnvService
   health/                  Liveness/readiness/startup probes and graceful shutdown
-  users/                   User entity, role/status enums and UsersModule
+  users/                   User entity, role/status enums, GET /users routes and UsersModule
   utils/                   Service metadata
 test/
   setup-env.ts             Env defaults for the int/e2e lanes
