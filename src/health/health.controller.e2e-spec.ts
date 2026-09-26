@@ -20,6 +20,13 @@ describe('Health probes (E2E)', () => {
       await app.close();
     });
 
+    it('identifies the service without authentication', async () => {
+      const response = await request(app.getHttpServer()).get('/health');
+
+      expect(response.statusCode).toBe(200);
+      expect(response.body).toEqual({ status: 'ok', service: 'users-service' });
+    });
+
     it('answers the liveness probe without authentication', async () => {
       const response = await request(app.getHttpServer()).get('/health/live');
 

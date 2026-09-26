@@ -7,7 +7,8 @@ It owns the `User` entity, the database connection, health probes and API
 docs, and registers accounts and logs them in through `POST /auth/register`
 and `POST /auth/login`. Every other route requires
 `Authorization: Bearer <token>` with a token from `POST /auth/login`; a route
-opts out with `@Public()` (auth, health probes and `GET /` do).
+opts out with `@Public()` (auth, `GET /health`, health probes and `GET /`
+do).
 
 Protected user reads:
 
@@ -20,6 +21,9 @@ Protected user reads:
 No response carries the password hash. Only `/users/profile` includes the
 email; the other two return the public shape (`id`, names, `role`, `status`)
 so any logged-in user cannot harvest other users' emails.
+
+`GET /health` answers `{ "status": "ok", "service": "users-service" }` without
+authentication; the api-gateway uses it for its aggregated health check.
 
 ## Where it sits
 

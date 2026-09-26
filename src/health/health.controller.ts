@@ -6,6 +6,7 @@ import {
   ApiTags,
 } from '@nestjs/swagger';
 import { Public } from '../auth/decorators/public.decorator';
+import { usersServiceDetails } from '../utils/users-service-details';
 import { DatabaseHealthIndicator } from './database-health.indicator';
 import { ShutdownService } from './shutdown.service';
 
@@ -21,6 +22,16 @@ export class HealthController {
     private readonly databaseHealthIndicator: DatabaseHealthIndicator,
     private readonly shutdownService: ShutdownService
   ) {}
+
+  @Get()
+  @ApiOperation({ summary: 'Identify the service and report that it is up' })
+  @ApiOkResponse({
+    description: 'Service is up',
+    schema: { example: { status: 'ok', service: 'users-service' } },
+  })
+  health() {
+    return { status: 'ok', service: usersServiceDetails.name };
+  }
 
   @Get('live')
   @ApiOperation({

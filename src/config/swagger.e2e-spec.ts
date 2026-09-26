@@ -40,6 +40,7 @@ describe('Swagger (e2e)', () => {
       '/',
       '/auth/login',
       '/auth/register',
+      '/health',
       '/health/live',
       '/health/ready',
       '/health/startup',
