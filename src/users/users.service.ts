@@ -2,6 +2,8 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { QueryFailedError, type Repository } from 'typeorm';
 import { User } from './entities/user.entity';
+import { UserRole } from './enums/user-role.enum';
+import { UserStatus } from './enums/user-status.enum';
 
 export type CreateUserData = Pick<
   User,
@@ -14,8 +16,20 @@ export class UsersService {
     @InjectRepository(User) private readonly users: Repository<User>
   ) {}
 
+  findById(id: string): Promise<User | null> {
+    return this.users.findOneBy({ id });
+  }
+
   findByEmail(email: string): Promise<User | null> {
     return this.users.findOneBy({ email });
+  }
+
+  /** Sorted by name, with the id as a tie-breaker, so the order is stable. */
+  findActiveSellers(): Promise<User[]> {
+    return this.users.find({
+      where: { role: UserRole.SELLER, status: UserStatus.ACTIVE },
+      order: { firstName: 'ASC', lastName: 'ASC', id: 'ASC' },
+    });
   }
 
   /**

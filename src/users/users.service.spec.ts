@@ -16,6 +16,7 @@ const data: CreateUserData = {
 function makeRepository() {
   return {
     findOneBy: vi.fn(),
+    find: vi.fn(),
     create: vi.fn((input: Partial<User>) => ({ ...input })),
     save: vi.fn(async (entity: Partial<User>) => ({ ...entity, id: 'user-1' })),
     findOneByOrFail: vi.fn(),
@@ -86,5 +87,37 @@ describe('UsersService', () => {
     expect(JSON.stringify({ ...(error as object) })).not.toContain(
       data.password
     );
+  });
+
+  it('looks a user up by id', async () => {
+    const repository = makeRepository();
+    const user = { id: 'user-1' } as User;
+    repository.findOneBy.mockResolvedValue(user);
+
+    await expect(makeService(repository).findById('user-1')).resolves.toBe(
+      user
+    );
+    expect(repository.findOneBy).toHaveBeenCalledWith({ id: 'user-1' });
+  });
+
+  it('answers null when no user has the id', async () => {
+    const repository = makeRepository();
+    repository.findOneBy.mockResolvedValue(null);
+
+    await expect(makeService(repository).findById('user-1')).resolves.toBeNull();
+  });
+
+  it('lists only active sellers, sorted by name', async () => {
+    const repository = makeRepository();
+    const sellers = [{ id: 'user-1' }] as User[];
+    repository.find.mockResolvedValue(sellers);
+
+    await expect(makeService(repository).findActiveSellers()).resolves.toBe(
+      sellers
+    );
+    expect(repository.find).toHaveBeenCalledWith({
+      where: { role: UserRole.SELLER, status: UserStatus.ACTIVE },
+      order: { firstName: 'ASC', lastName: 'ASC', id: 'ASC' },
+    });
   });
 });

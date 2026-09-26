@@ -121,4 +121,47 @@ describe('UsersService (integration)', () => {
 
     expect(found?.password).toBeUndefined();
   });
+
+  it('finds a created user by id without the password hash', async () => {
+    const created = await usersService.create(data);
+
+    const found = await usersService.findById(created.id);
+
+    expect(found).toMatchObject({ id: created.id, email: data.email });
+    expect(found?.password).toBeUndefined();
+  });
+
+  it('answers null for an unknown id', async () => {
+    await expect(
+      usersService.findById('00000000-0000-4000-8000-000000000000')
+    ).resolves.toBeNull();
+  });
+
+  it('lists only active sellers, sorted by name, without password hashes', async () => {
+    await usersService.create({
+      ...data,
+      email: 'caio@marketplace.dev',
+      firstName: 'Caio',
+    });
+    await usersService.create({ ...data, email: 'ana@marketplace.dev' });
+    await usersService.create({
+      ...data,
+      email: 'bia@marketplace.dev',
+      firstName: 'Bia',
+      role: UserRole.BUYER,
+    });
+    await usersService.create({
+      ...data,
+      email: 'davi@marketplace.dev',
+      firstName: 'Davi',
+      status: UserStatus.INACTIVE,
+    });
+
+    const sellers = await usersService.findActiveSellers();
+
+    expect(sellers.map((seller) => seller.firstName)).toEqual(['Ana', 'Caio']);
+    for (const seller of sellers) {
+      expect(seller.password).toBeUndefined();
+    }
+  });
 });
