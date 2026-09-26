@@ -104,7 +104,9 @@ describe('UsersService', () => {
     const repository = makeRepository();
     repository.findOneBy.mockResolvedValue(null);
 
-    await expect(makeService(repository).findById('user-1')).resolves.toBeNull();
+    await expect(
+      makeService(repository).findById('user-1')
+    ).resolves.toBeNull();
   });
 
   it('lists only active sellers, sorted by name', async () => {
