@@ -43,12 +43,15 @@ describe('Swagger (e2e)', () => {
       '/health/live',
       '/health/ready',
       '/health/startup',
+      '/users/profile',
+      '/users/sellers',
+      '/users/{id}',
     ]);
   });
 
   it('groups the probes and the greeting under Health', () => {
     const getPaths = Object.keys(document.paths).filter(
-      (path) => document.paths[path].get
+      (path) => document.paths[path].get && !path.startsWith('/users')
     );
 
     for (const path of getPaths) {
@@ -98,5 +101,28 @@ describe('Swagger (e2e)', () => {
     expect(Object.keys(schemas)).toEqual(
       expect.arrayContaining(['LoginDto', 'LoginResponseDto'])
     );
+  });
+
+  it.each<[string, string[]]>([
+    ['/users/profile', ['200', '401']],
+    ['/users/sellers', ['200', '401']],
+    ['/users/{id}', ['200', '400', '401', '404']],
+  ])('documents GET %s under Users behind the bearer token', (path, codes) => {
+    const operation = document.paths[path].get;
+
+    expect(operation?.tags).toEqual(['Users']);
+    expect(operation?.summary).toBeTruthy();
+    expect(operation?.security).toEqual([{ 'JWT-auth': [] }]);
+    expect(Object.keys(operation?.responses ?? {}).sort()).toEqual(codes);
+  });
+
+  it('documents the public user shape without email or password', () => {
+    const schema = JSON.stringify(
+      document.components?.schemas?.PublicUserResponseDto
+    );
+
+    expect(schema).toBeDefined();
+    expect(schema).not.toContain('email');
+    expect(schema).not.toContain('password');
   });
 });
