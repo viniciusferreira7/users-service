@@ -13,6 +13,7 @@ import { isUniqueViolation } from '../utils/is-unique-violation';
 import type { LoginDto } from './dtos/login.dto';
 import type { LoginResponseDto } from './dtos/login-response.dto';
 import type { RegisterDto } from './dtos/register.dto';
+import { ValidateTokenResponseDto } from './dtos/validate-token-response.dto';
 import { normalizeEmail } from './normalize-email';
 import { PASSWORD_SALT_ROUNDS, verifyPassword } from './password';
 
@@ -57,6 +58,21 @@ export class AuthService {
 
       throw error;
     }
+  }
+
+  /**
+   * The JWT guard already checked signature and expiry; this is the part a
+   * token cannot answer on its own — whether the account still exists and is
+   * allowed in.
+   */
+  async validateToken(userId: string): Promise<ValidateTokenResponseDto> {
+    const user = await this.usersService.findById(userId);
+
+    if (!user || user.status !== UserStatus.ACTIVE) {
+      throw new UnauthorizedException();
+    }
+
+    return ValidateTokenResponseDto.from(user);
   }
 
   async login(dto: LoginDto): Promise<LoginResponseDto> {

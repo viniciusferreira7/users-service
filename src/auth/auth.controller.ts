@@ -1,13 +1,16 @@
 import {
   Body,
   Controller,
+  Get,
   HttpCode,
   HttpStatus,
   Post,
+  Req,
   UseGuards,
 } from '@nestjs/common';
 import {
   ApiBadRequestResponse,
+  ApiBearerAuth,
   ApiConflictResponse,
   ApiCreatedResponse,
   ApiOkResponse,
@@ -20,10 +23,12 @@ import { Throttle, ThrottlerGuard } from '@nestjs/throttler';
 import { UserResponseDto } from '../users/dtos/user-response.dto';
 import { AuthService } from './auth.service';
 import { LOGIN_THROTTLE, REGISTER_THROTTLE } from './auth-throttles';
+import type { AuthenticatedUser } from './authenticated-user';
 import { Public } from './decorators/public.decorator';
 import { LoginDto } from './dtos/login.dto';
 import { LoginResponseDto } from './dtos/login-response.dto';
 import { RegisterDto } from './dtos/register.dto';
+import { ValidateTokenResponseDto } from './dtos/validate-token-response.dto';
 
 @ApiTags('Auth')
 @Controller('auth')
@@ -68,5 +73,26 @@ export class AuthController {
   @ApiTooManyRequestsResponse({ description: 'Login rate limit exceeded' })
   login(@Body() dto: LoginDto): Promise<LoginResponseDto> {
     return this.authService.login(dto);
+  }
+
+  @Get('validate-token')
+  @ApiBearerAuth('JWT-auth')
+  @ApiOperation({
+    summary: 'Validate a bearer token',
+    description:
+      'Used by the api-gateway. Checks the JWT and that its account still exists and is active; answers who it belongs to.',
+  })
+  @ApiOkResponse({
+    type: ValidateTokenResponseDto,
+    description: 'Token is valid',
+  })
+  @ApiUnauthorizedResponse({
+    description:
+      'Missing, invalid or expired token, or an inactive or deleted account',
+  })
+  validateToken(
+    @Req() request: { user: AuthenticatedUser }
+  ): Promise<ValidateTokenResponseDto> {
+    return this.authService.validateToken(request.user.id);
   }
 }

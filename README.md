@@ -25,6 +25,10 @@ so any logged-in user cannot harvest other users' emails.
 `GET /health` answers `{ "status": "ok", "service": "users-service" }` without
 authentication; the api-gateway uses it for its aggregated health check.
 
+`GET /auth/validate-token` (bearer token required) answers `{ userId, email,
+role }` for a token whose account still exists and is active, and `401`
+otherwise. The api-gateway calls it to authenticate every protected request.
+
 ## Where it sits
 
 ```

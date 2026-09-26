@@ -40,6 +40,7 @@ describe('Swagger (e2e)', () => {
       '/',
       '/auth/login',
       '/auth/register',
+      '/auth/validate-token',
       '/health',
       '/health/live',
       '/health/ready',
@@ -52,7 +53,10 @@ describe('Swagger (e2e)', () => {
 
   it('groups the probes and the greeting under Health', () => {
     const getPaths = Object.keys(document.paths).filter(
-      (path) => document.paths[path].get && !path.startsWith('/users')
+      (path) =>
+        document.paths[path].get &&
+        !path.startsWith('/users') &&
+        !path.startsWith('/auth')
     );
 
     for (const path of getPaths) {
@@ -93,6 +97,18 @@ describe('Swagger (e2e)', () => {
       '400',
       '401',
       '429',
+    ]);
+  });
+
+  it('documents the token validation endpoint under Auth behind the bearer token', () => {
+    const operation = document.paths['/auth/validate-token'].get;
+
+    expect(operation?.tags).toEqual(['Auth']);
+    expect(operation?.summary).toBeTruthy();
+    expect(operation?.security).toEqual([{ 'JWT-auth': [] }]);
+    expect(Object.keys(operation?.responses ?? {}).sort()).toEqual([
+      '200',
+      '401',
     ]);
   });
 

@@ -48,6 +48,7 @@ const storedUser: User = {
 
 function makeUsersService() {
   return {
+    findById: vi.fn(async (_id: string): Promise<User | null> => storedUser),
     findByEmail: vi.fn(async (_email: string): Promise<User | null> => null),
     findByEmailWithPassword: vi.fn(
       async (_email: string): Promise<User | null> => storedUser
@@ -274,5 +275,39 @@ describe('AuthService.login', () => {
     await expect(
       authService.login({ ...credentials, password: 'wrong-password' })
     ).rejects.toThrow(new UnauthorizedException(INVALID_CREDENTIALS));
+  });
+});
+
+describe('AuthService.validateToken', () => {
+  it('answers the id, email and role read from the database', async () => {
+    const { authService, usersService } = makeAuthService();
+
+    await expect(authService.validateToken('user-1')).resolves.toEqual({
+      userId: 'user-1',
+      email: 'ana@marketplace.dev',
+      role: UserRole.SELLER,
+    });
+    expect(usersService.findById).toHaveBeenCalledWith('user-1');
+  });
+
+  it('refuses a token whose user no longer exists', async () => {
+    const { authService, usersService } = makeAuthService();
+    usersService.findById.mockResolvedValue(null);
+
+    await expect(authService.validateToken('user-1')).rejects.toBeInstanceOf(
+      UnauthorizedException
+    );
+  });
+
+  it('refuses a token whose user was deactivated', async () => {
+    const { authService, usersService } = makeAuthService();
+    usersService.findById.mockResolvedValue({
+      ...storedUser,
+      status: UserStatus.INACTIVE,
+    });
+
+    await expect(authService.validateToken('user-1')).rejects.toBeInstanceOf(
+      UnauthorizedException
+    );
   });
 });
