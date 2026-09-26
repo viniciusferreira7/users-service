@@ -20,6 +20,7 @@ import { Throttle, ThrottlerGuard } from '@nestjs/throttler';
 import { UserResponseDto } from '../users/dtos/user-response.dto';
 import { AuthService } from './auth.service';
 import { LOGIN_THROTTLE, REGISTER_THROTTLE } from './auth-throttles';
+import { Public } from './decorators/public.decorator';
 import { LoginDto } from './dtos/login.dto';
 import { LoginResponseDto } from './dtos/login-response.dto';
 import { RegisterDto } from './dtos/register.dto';
@@ -30,6 +31,7 @@ export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
   @Post('register')
+  @Public()
   @UseGuards(ThrottlerGuard)
   @Throttle({ default: REGISTER_THROTTLE })
   @ApiOperation({
@@ -48,6 +50,7 @@ export class AuthController {
   }
 
   @Post('login')
+  @Public()
   @HttpCode(HttpStatus.OK)
   @UseGuards(ThrottlerGuard)
   @Throttle({ default: LOGIN_THROTTLE })
