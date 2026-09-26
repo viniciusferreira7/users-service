@@ -17,7 +17,7 @@ const port = z.coerce.number().int().min(1).max(65_535);
 
 export const envSchema = z.object({
   NODE_ENV: z.enum(['dev', 'test', 'production']).default('dev'),
-  PORT: port.default(3336),
+  PORT: port.default(3334),
   SHUTDOWN_DRAIN_DELAY_MS: z.coerce.number().int().min(0).default(10_000),
 
   DATABASE_URL: z.url(),

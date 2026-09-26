@@ -32,7 +32,7 @@ otherwise. The api-gateway calls it to authenticate every protected request.
 ## Where it sits
 
 ```
-                      ┌──▶ users-service (3336)      ── users_db (5435)
+                      ┌──▶ users-service (3334)      ── users_db (5435)
 api-gateway (3333) ───┤
                       └──▶ checkout-service (3334) ──[payments exchange]──▶ payments-service (3335)
 ```
@@ -66,8 +66,8 @@ pnpm install
 pnpm start:dev
 ```
 
-The service listens on `http://localhost:3336`; Swagger UI is at
-`http://localhost:3336/api`. In `dev` TypeORM synchronizes the schema, so
+The service listens on `http://localhost:3334`; Swagger UI is at
+`http://localhost:3334/api`. In `dev` TypeORM synchronizes the schema, so
 the `users` table is created on first boot.
 
 The test lanes get their own throwaway Postgres behind the `test` profile, on

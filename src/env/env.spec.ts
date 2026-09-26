@@ -17,7 +17,7 @@ describe('envSchema', () => {
     const env = envSchema.parse(baseEnv);
 
     expect(env.NODE_ENV).toBe('dev');
-    expect(env.PORT).toBe(3336);
+    expect(env.PORT).toBe(3334);
     expect(env.LOG_LEVEL).toBe('info');
     expect(env.SHUTDOWN_DRAIN_DELAY_MS).toBe(10_000);
   });
