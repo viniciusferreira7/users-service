@@ -1,3 +1,4 @@
+import { migrations } from '../database/migrations';
 import type { EnvService } from '../env/env.service';
 import { databaseConfig } from './database.config';
 
@@ -21,19 +22,14 @@ describe('databaseConfig', () => {
     });
   });
 
-  it('synchronizes the schema only in dev', () => {
-    expect(databaseConfig(makeEnv({ NODE_ENV: 'dev' }))).toMatchObject({
-      synchronize: true,
-    });
-
-    // A schema sync against test or production data would drop columns the
-    // entities no longer declare.
-    expect(databaseConfig(makeEnv({ NODE_ENV: 'test' }))).toMatchObject({
-      synchronize: false,
-    });
-    expect(databaseConfig(makeEnv({ NODE_ENV: 'production' }))).toMatchObject({
-      synchronize: false,
-    });
+  it('never synchronizes: every environment runs the migrations on boot', () => {
+    for (const NODE_ENV of ['dev', 'test', 'production']) {
+      expect(databaseConfig(makeEnv({ NODE_ENV }))).toMatchObject({
+        synchronize: false,
+        migrationsRun: true,
+        migrations,
+      });
+    }
   });
 
   it('silences query logging in production only', () => {

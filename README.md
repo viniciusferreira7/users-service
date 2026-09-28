@@ -67,8 +67,26 @@ pnpm start:dev
 ```
 
 The service listens on `http://localhost:3334`; Swagger UI is at
-`http://localhost:3334/api`. In `dev` TypeORM synchronizes the schema, so
-the `users` table is created on first boot.
+`http://localhost:3334/api`.
+
+## Migrations
+
+The schema only changes through migrations — `synchronize` is off in every
+environment — and the service runs any pending migration on boot
+(`migrationsRun`), so a fresh database gets the `users` table on first start.
+
+```bash
+pnpm migration:generate src/database/migrations/AddSomething   # diff entities vs. database
+pnpm migration:run
+pnpm migration:revert
+```
+
+Add every generated class to `src/database/migrations/index.ts`: migrations are
+listed explicitly so the same array works under the CLI, Vitest and `dist/`.
+
+A database created by the old `synchronize` setup already has the tables; if
+`pnpm typeorm schema:log -d src/database/data-source.ts` reports it up to date,
+mark the first migration as applied with `pnpm migration:run --fake`.
 
 The test lanes get their own throwaway Postgres behind the `test` profile, on
 port 5436 with the `users_db_test` database, so the suite never writes to the
@@ -84,6 +102,8 @@ through `pnpm test:infra` (`docker compose --profile test up -d --wait`);
 | `pnpm build` | Compile to `dist/` |
 | `pnpm check` / `pnpm check:fix` | Biome lint + format |
 | `pnpm check:type` | `tsc --noEmit` |
+| `pnpm migration:generate <path>` | Generate a migration from the entity diff |
+| `pnpm migration:run` / `pnpm migration:revert` | Apply / roll back migrations |
 | `pnpm test:infra` | Boots the test Postgres and waits for it to be healthy |
 | `pnpm test:infra:down` | Stops the test infrastructure |
 | `pnpm test:unit` | Unit lane — `*.spec.ts`, no infra |

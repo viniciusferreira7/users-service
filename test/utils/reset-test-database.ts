@@ -2,12 +2,13 @@ import type { DataSource } from 'typeorm';
 import { assertTestDatabase } from './assert-test-database';
 
 /**
- * Rebuilds the schema from the entities on the throwaway test database.
- * `synchronize` is off outside dev, and `synchronize(true)` drops every
- * table, so the `*_test` guard runs first.
+ * Rebuilds the schema on the throwaway test database from the real
+ * migrations, so every spec runs against exactly what production gets.
+ * `dropDatabase()` wipes every table, so the `*_test` guard runs first.
  */
 export async function resetTestDatabase(dataSource: DataSource): Promise<void> {
   assertTestDatabase(process.env.DATABASE_URL);
 
-  await dataSource.synchronize(true);
+  await dataSource.dropDatabase();
+  await dataSource.runMigrations();
 }

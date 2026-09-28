@@ -2,6 +2,7 @@ import { ConfigModule } from '@nestjs/config';
 import { Test, type TestingModule } from '@nestjs/testing';
 import { getRepositoryToken, TypeOrmModule } from '@nestjs/typeorm';
 import { assertTestDatabase } from 'test/utils/assert-test-database';
+import { resetTestDatabase } from 'test/utils/reset-test-database';
 import { sqlStateOf } from 'test/utils/sql-state-of';
 import { DataSource, type Repository } from 'typeorm';
 import { databaseConfig } from '@/config/database.config';
@@ -50,9 +51,7 @@ describe('User persistence (integration)', () => {
       ],
     }).compile();
 
-    // `synchronize` is off outside dev, so build the schema on the throwaway
-    // database from the entity itself.
-    await moduleRef.get(DataSource).synchronize(true);
+    await resetTestDatabase(moduleRef.get(DataSource));
 
     users = moduleRef.get(getRepositoryToken(User));
   });

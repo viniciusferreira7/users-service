@@ -1,5 +1,6 @@
 import { TypeOrmModuleOptions } from '@nestjs/typeorm';
 
+import { migrations } from '../database/migrations';
 import { EnvService } from '../env/env.service';
 
 /**
@@ -14,7 +15,11 @@ export function databaseConfig(env: EnvService): TypeOrmModuleOptions {
     type: 'postgres',
     url: env.get('DATABASE_URL'),
     autoLoadEntities: true,
-    synchronize: nodeEnv === 'dev',
+    // The schema only changes through migrations, in every environment, so
+    // dev and production can never drift apart.
+    synchronize: false,
+    migrations,
+    migrationsRun: true,
     logging: nodeEnv !== 'production',
   };
 }
