@@ -18,6 +18,7 @@ const defaults: Record<string, string> = {
   DATABASE_NAME: 'users_db_test',
   // Throwaway signing key for the int/e2e lanes (the schema needs >= 32 chars).
   JWT_SECRET: 'test-only-jwt-secret-never-use-in-real-life',
+  CORS_ORIGIN: 'http://localhost:3333',
   // `NODE_ENV=test` disables the signals SDK, so nothing is exported. These
   // only exist to satisfy the Zod schema.
   OTEL_SERVICE_NAME: 'users-service',

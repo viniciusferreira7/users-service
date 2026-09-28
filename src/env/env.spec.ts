@@ -10,6 +10,7 @@ const baseEnv = {
   OTEL_SERVICE_NAME: 'users-service',
   OTEL_EXPORTER_OTLP_ENDPOINT: 'http://localhost:4318',
   JWT_SECRET: 'a'.repeat(32),
+  CORS_ORIGIN: 'http://localhost:3333',
 };
 
 describe('envSchema', () => {
@@ -120,5 +121,42 @@ describe('envSchema', () => {
     expect(() =>
       envSchema.parse({ ...baseEnv, JWT_SECRET: placeholder })
     ).toThrow();
+  });
+
+  describe('CORS_ORIGIN', () => {
+    it('parses a comma-separated allowlist of origins', () => {
+      const env = envSchema.parse({
+        ...baseEnv,
+        CORS_ORIGIN: 'http://localhost:3333, https://marketplace.dev',
+      });
+
+      expect(env.CORS_ORIGIN).toEqual([
+        'http://localhost:3333',
+        'https://marketplace.dev',
+      ]);
+    });
+
+    it('is required', () => {
+      const { CORS_ORIGIN: _omitted, ...without } = baseEnv;
+
+      expect(() => envSchema.parse(without)).toThrow();
+      expect(() => envSchema.parse({ ...baseEnv, CORS_ORIGIN: '' })).toThrow();
+    });
+
+    it('refuses the wildcard: the allowlist must name each origin', () => {
+      expect(() => envSchema.parse({ ...baseEnv, CORS_ORIGIN: '*' })).toThrow();
+      expect(() =>
+        envSchema.parse({
+          ...baseEnv,
+          CORS_ORIGIN: 'http://localhost:3333,*',
+        })
+      ).toThrow();
+    });
+
+    it('rejects an entry that is not a url', () => {
+      expect(() =>
+        envSchema.parse({ ...baseEnv, CORS_ORIGIN: 'localhost:3333' })
+      ).toThrow();
+    });
   });
 });

@@ -16,7 +16,7 @@ async function bootstrap() {
 
   app.useLogger(app.get(PinoLoggerService));
 
-  configureApp(app);
+  configureApp(app, { corsOrigins: envService.get('CORS_ORIGIN') });
 
   setupSwagger(app);
 

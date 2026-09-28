@@ -27,7 +27,7 @@ describe('Global ValidationPipe (e2e)', () => {
     }).compile();
 
     app = moduleRef.createNestApplication();
-    configureApp(app);
+    configureApp(app, { corsOrigins: [] });
     await app.init();
   });
 

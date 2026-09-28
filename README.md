@@ -69,6 +69,12 @@ pnpm start:dev
 The service listens on `http://localhost:3334`; Swagger UI is at
 `http://localhost:3334/api`.
 
+## CORS
+
+Only the browser origins listed in `CORS_ORIGIN` (comma-separated) may call
+the service; `*` is rejected at boot. The api-gateway calls it server to
+server, which CORS does not affect.
+
 ## Migrations
 
 The schema only changes through migrations — `synchronize` is off in every

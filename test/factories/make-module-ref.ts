@@ -7,6 +7,7 @@ import {
 } from '@nestjs/testing';
 import { AppModule } from '@/app.module';
 import { configureApp } from '@/app.setup';
+import { EnvService } from '@/env/env.service';
 
 /**
  * Builds the application's DI container for the integration and e2e lanes.
@@ -48,7 +49,9 @@ export async function startApp(
 ): Promise<INestApplication> {
   const app = moduleRef.createNestApplication<NestExpressApplication>();
 
-  configureApp(app);
+  configureApp(app, {
+    corsOrigins: moduleRef.get(EnvService).get('CORS_ORIGIN'),
+  });
 
   if (options?.beforeInit) {
     await options.beforeInit(app);

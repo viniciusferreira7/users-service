@@ -33,6 +33,19 @@ export const envSchema = z.object({
   // Signs the tokens `POST /auth/login` issues. The api-gateway verifies them
   // with its own copy, so both services must share this exact value.
   JWT_SECRET: z.string().min(32),
+
+  // Browser origins allowed to call this service, comma-separated. The
+  // wildcard is refused on purpose: every origin is named. Server-to-server
+  // calls (the api-gateway) are not subject to CORS at all.
+  CORS_ORIGIN: z
+    .string()
+    .transform((value) =>
+      value
+        .split(',')
+        .map((origin) => origin.trim())
+        .filter(Boolean)
+    )
+    .pipe(z.array(z.url({ protocol: /^https?$/ })).min(1)),
 });
 
 export type Env = z.infer<typeof envSchema>;
