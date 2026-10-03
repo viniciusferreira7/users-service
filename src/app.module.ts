@@ -13,6 +13,7 @@ import { EnvModule } from './env/env.module';
 import { EnvService } from './env/env.service';
 import { HealthModule } from './health/health.module';
 import { UsersModule } from './users/users.module';
+import { usersServiceDetails } from './utils/users-service-details';
 
 @Module({
   imports: [
@@ -22,7 +23,10 @@ import { UsersModule } from './users/users.module';
       validate: (env) => envSchema.parse(env),
     }),
     EnvModule,
-    ObservabilityModule.forRoot({ serviceName: 'users-service' }),
+    ObservabilityModule.forRoot({
+      serviceName: usersServiceDetails.name,
+      serviceVersion: usersServiceDetails.version,
+    }),
     TypeOrmModule.forRootAsync({
       imports: [EnvModule],
       inject: [EnvService],
