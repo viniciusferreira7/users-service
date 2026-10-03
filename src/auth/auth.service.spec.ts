@@ -2,6 +2,7 @@ import { ConflictException, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { compare, getRounds, hashSync } from 'bcryptjs';
 import { QueryFailedError } from 'typeorm';
+import { metrics } from '../observability/metrics';
 import type { User } from '../users/entities/user.entity';
 import { UserRole } from '../users/enums/user-role.enum';
 import { UserStatus } from '../users/enums/user-status.enum';
@@ -309,5 +310,172 @@ describe('AuthService.validateToken', () => {
     await expect(authService.validateToken('user-1')).rejects.toBeInstanceOf(
       UnauthorizedException
     );
+  });
+});
+
+describe('AuthService metrics', () => {
+  let operations: ReturnType<typeof vi.spyOn>;
+  let duration: ReturnType<typeof vi.spyOn>;
+
+  beforeEach(() => {
+    // No meter provider under test: every counter is the same no-op object,
+    // so the attributes — not the call count — are what the tests check.
+    operations = vi.spyOn(metrics.auth_operations, 'add');
+    duration = vi.spyOn(metrics.auth_operation_duration, 'record');
+  });
+
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  const settledWith = (operation: string, outcome: string) => {
+    expect(operations).toHaveBeenCalledWith(1, { operation, outcome });
+    expect(duration).toHaveBeenCalledWith(expect.any(Number), {
+      operation,
+      outcome,
+    });
+  };
+
+  it('counts a registration', async () => {
+    const { authService } = makeAuthService();
+
+    await authService.register(dto);
+
+    settledWith('register', 'succeeded');
+  });
+
+  it('counts a registered email as email_taken', async () => {
+    const { authService, usersService } = makeAuthService();
+    usersService.findByEmail.mockResolvedValue(storedUser);
+
+    await expect(authService.register(dto)).rejects.toBeInstanceOf(
+      ConflictException
+    );
+
+    settledWith('register', 'email_taken');
+  });
+
+  it('counts a concurrent duplicate as email_taken', async () => {
+    const { authService, usersService } = makeAuthService();
+    usersService.create.mockRejectedValue(uniqueViolation());
+
+    await expect(authService.register(dto)).rejects.toBeInstanceOf(
+      ConflictException
+    );
+
+    settledWith('register', 'email_taken');
+  });
+
+  it('counts an unexpected registration error as failed and rethrows it', async () => {
+    const { authService, usersService } = makeAuthService();
+    const failure = new Error('connection lost');
+    usersService.create.mockRejectedValue(failure);
+
+    await expect(authService.register(dto)).rejects.toBe(failure);
+
+    settledWith('register', 'failed');
+  });
+
+  it('records a domain refusal once, never also as failed', async () => {
+    const { authService, usersService } = makeAuthService();
+    usersService.findByEmail.mockResolvedValue(storedUser);
+
+    await expect(authService.register(dto)).rejects.toThrow();
+
+    expect(operations).toHaveBeenCalledTimes(1);
+  });
+
+  it('counts a login', async () => {
+    const { authService } = makeAuthService();
+
+    await authService.login({ email: dto.email, password: 'secret123' });
+
+    settledWith('login', 'succeeded');
+  });
+
+  it.each([
+    ['an unknown email', null, 'secret123'],
+    ['a wrong password', storedUser, 'wrong-password'],
+  ])('counts %s as invalid_credentials', async (_case, user, password) => {
+    const { authService, usersService } = makeAuthService();
+    usersService.findByEmailWithPassword.mockResolvedValue(user);
+
+    await expect(
+      authService.login({ email: dto.email, password })
+    ).rejects.toThrow(INVALID_CREDENTIALS);
+
+    settledWith('login', 'invalid_credentials');
+  });
+
+  it('counts an inactive account with the right password as inactive_account', async () => {
+    const { authService, usersService } = makeAuthService();
+    usersService.findByEmailWithPassword.mockResolvedValue({
+      ...storedUser,
+      status: UserStatus.INACTIVE,
+    });
+
+    await expect(
+      authService.login({ email: dto.email, password: 'secret123' })
+    ).rejects.toThrow(INACTIVE_ACCOUNT);
+
+    settledWith('login', 'inactive_account');
+  });
+
+  it('counts an unexpected login error as failed and rethrows it', async () => {
+    const { authService, usersService } = makeAuthService();
+    const failure = new Error('connection lost');
+    usersService.findByEmailWithPassword.mockRejectedValue(failure);
+
+    await expect(
+      authService.login({ email: dto.email, password: 'secret123' })
+    ).rejects.toBe(failure);
+
+    settledWith('login', 'failed');
+  });
+
+  it('counts a valid token check', async () => {
+    const { authService } = makeAuthService();
+
+    await authService.validateToken(storedUser.id);
+
+    settledWith('validate_token', 'succeeded');
+  });
+
+  it('counts a token of a missing or inactive account as rejected', async () => {
+    const { authService, usersService } = makeAuthService();
+    usersService.findById.mockResolvedValue(null);
+
+    await expect(
+      authService.validateToken(storedUser.id)
+    ).rejects.toBeInstanceOf(UnauthorizedException);
+
+    settledWith('validate_token', 'rejected');
+  });
+
+  it('counts an unexpected token check error as failed and rethrows it', async () => {
+    const { authService, usersService } = makeAuthService();
+    const failure = new Error('connection lost');
+    usersService.findById.mockRejectedValue(failure);
+
+    await expect(authService.validateToken(storedUser.id)).rejects.toBe(
+      failure
+    );
+
+    settledWith('validate_token', 'failed');
+  });
+
+  it('carries only closed-set attributes', async () => {
+    const { authService } = makeAuthService();
+
+    await authService.login({ email: dto.email, password: 'secret123' });
+
+    // An email or a user id as an attribute mints a series per person.
+    for (const [, attributes] of operations.mock.calls) {
+      expect(Object.keys(attributes as object).sort()).toEqual([
+        'operation',
+        'outcome',
+      ]);
+      expect(JSON.stringify(attributes)).not.toContain(dto.email);
+    }
   });
 });
