@@ -22,8 +22,10 @@ No response carries the password hash. Only `/users/profile` includes the
 email; the other two return the public shape (`id`, names, `role`, `status`)
 so any logged-in user cannot harvest other users' emails.
 
-`GET /health` answers `{ "status": "ok", "service": "users-service" }` without
-authentication; the api-gateway uses it for its aggregated health check.
+`GET /health` answers without authentication with the same verdict as the
+readiness probe: `200 { "status": "ok", "uptime", "checks": { "database" } }`,
+or `503` when the database is down or the process is shutting down. The
+api-gateway uses it for its aggregated health check.
 
 `GET /auth/validate-token` (bearer token required) answers `{ userId, email,
 role }` for a token whose account still exists and is active, and `401`
